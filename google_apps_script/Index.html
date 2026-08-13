@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון חשמל לדיירים</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: rgba(22, 31, 49, 0.95);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(56, 189, 248, 0.3);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #f43f5e;
+      --gradient-brand: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+      --radius-md: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Rubik', system-ui, sans-serif;
+      padding: 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand i { font-size: 24px; color: var(--accent-cyan); }
+    .brand h2 { font-size: 18px; font-weight: 700; }
+    
+    .tariff-badge {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--border-accent);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    .tariff-badge strong { color: var(--accent-cyan); }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    
+    .meter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .meter-opt {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.4);
+      transition: all 0.2s;
+    }
+    .meter-opt.active {
+      border-color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.15);
+    }
+    .meter-title { font-size: 13px; font-weight: 600; }
+    .meter-col { font-size: 11px; color: var(--accent-amber); margin-top: 2px; }
+
+    .input-box {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .input-box:focus { outline: none; border-color: var(--accent-cyan); }
+
+    .photo-area {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.3);
+    }
+    .photo-area i { font-size: 24px; color: var(--accent-cyan); }
+    .photo-area p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .calc-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+    .calc-res { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color); }
+    .calc-res strong { font-size: 18px; color: var(--accent-green); }
+
+    .btn-sub {
+      width: 100%;
+      background: var(--gradient-brand);
+      border: none;
+      color: #fff;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background: #1e293b;
+      border: 1px solid var(--accent-green);
+      color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">
+      <i class="fa-solid fa-bolt"></i>
+      <h2>מחשבון חשמל לדיירים</h2>
+    </div>
+    <div class="tariff-badge">
+      תעריף: <strong id="tariffVal">0.6352 ₪</strong>
+    </div>
+  </div>
+
+  <form id="calcForm">
+    
+    <!-- Meter Select -->
+    <div class="form-group">
+      <label class="form-label">בחר מונה:</label>
+      <div class="meter-grid">
+        <div class="meter-opt active" id="optSmall">
+          <input type="radio" name="meter_type" value="small_watch" checked hidden>
+          <div class="meter-title">מונה קטן - דייר משני</div>
+          <div class="meter-col">עדכון עמודה Q</div>
+        </div>
+        <div class="meter-opt" id="optBig">
+          <input type="radio" name="meter_type" value="big_watch" hidden>
+          <div class="meter-title">מונה ראשי - בית</div>
+          <div class="meter-col">עדכון עמודה I</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inputs -->
+    <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+      <div class="form-group" style="flex: 1;">
+        <label class="form-label">תאריך:</label>
+        <input type="date" id="dateInput" class="input-box" required>
+      </div>
+      <div class="form-group" style="flex: 1;">
+        <label class="form-label">קריאה ב-קוט"ש:</label>
+        <input type="number" step="0.1" id="readingInput" class="input-box" placeholder="קריאת מונה" required>
+      </div>
+    </div>
+
+    <!-- Photo -->
+    <div class="form-group">
+      <label class="form-label">צילום מונה:</label>
+      <div class="photo-area" id="photoDrop">
+        <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
+        <i class="fa-solid fa-camera"></i>
+        <p id="photoTxt">לחץ כאן כדי לצלם או להעלות תמונה</p>
+      </div>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="calc-card hidden" id="previewCard">
+      <div class="calc-grid">
+        <div>צריכה: <strong id="pvKwh">--</strong></div>
+        <div>ימים: <strong id="pvDays">--</strong></div>
+        <div>ממוצע: <strong id="pvAvg">--</strong></div>
+        <div>יעד: <strong id="pvCol" style="color:var(--accent-amber)">--</strong></div>
+      </div>
+      <div class="calc-res">
+        <span>לתשלום:</span>
+        <strong id="pvCost">0.00 ₪</strong>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-sub" id="btnSubmit">
+      <i class="fa-solid fa-floppy-disk"></i> עדכן בגוגל שיטס (Google Sheets)
+    </button>
+  </form>
+
+  <div class="toast hidden" id="toastBox">
+    <i class="fa-solid fa-circle-check"></i> <span id="toastTxt"></span>
+  </div>
+
+  <script>
+    var selectedPhoto = null;
+
+    document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+
+    // Meter Toggle
+    document.getElementById('optSmall').addEventListener('click', function() {
+      this.classList.add('active');
+      document.getElementById('optBig').classList.remove('active');
+      document.querySelector('input[value="small_watch"]').checked = true;
+      calcPreview();
+    });
+    document.getElementById('optBig').addEventListener('click', function() {
+      this.classList.add('active');
+      document.getElementById('optSmall').classList.remove('active');
+      document.querySelector('input[value="big_watch"]').checked = true;
+      calcPreview();
+    });
+
+    // Photo
+    document.getElementById('photoDrop').addEventListener('click', function() {
+      document.getElementById('fileInput').click();
+    });
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        var file = e.target.files[0];
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          selectedPhoto = {
+            base64: evt.target.result,
+            name: file.name,
+            type: file.type
+          };
+          document.getElementById('photoTxt').textContent = "✓ תמונה מוכנה להעלאה: " + file.name;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('readingInput').addEventListener('input', calcPreview);
+    document.getElementById('dateInput').addEventListener('input', calcPreview);
+
+    // Initial tariff fetch
+    google.script.run.withSuccessHandler(function(t) {
+      if (t && t.rate_with_vat) {
+        document.getElementById('tariffVal').textContent = t.rate_with_vat + " ₪";
+      }
+    }).getTariffInfo();
+
+    function calcPreview() {
+      var r = parseFloat(document.getElementById('readingInput').value);
+      var d = document.getElementById('dateInput').value;
+      var m = document.querySelector('input[name="meter_type"]:checked').value;
+
+      if (!r || r <= 0 || !d) {
+        document.getElementById('previewCard').classList.add('hidden');
+        return;
+      }
+
+      google.script.run.withSuccessHandler(function(res) {
+        document.getElementById('pvKwh').textContent = res.kwh_consumed + " קוט\"ש";
+        document.getElementById('pvDays').textContent = res.days + " ימים";
+        document.getElementById('pvAvg').textContent = res.kwh_per_day + " קוט\"ש/יום";
+        document.getElementById('pvCol').textContent = res.target_column;
+        document.getElementById('pvCost').textContent = res.calculated_cost_nis.toFixed(2) + " ₪";
+        document.getElementById('previewCard').classList.remove('hidden');
+      }).calculatePreview(m, r, d);
+    }
+
+    // Submit
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var r = parseFloat(document.getElementById('readingInput').value);
+      var d = document.getElementById('dateInput').value;
+      var m = document.querySelector('input[name="meter_type"]:checked').value;
+
+      var btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> מעדכן בגוגל שיטס...`;
+
+      var payload = {
+        meterType: m,
+        reading: r,
+        dateStr: d,
+        photoBase64: selectedPhoto ? selectedPhoto.base64 : null,
+        photoName: selectedPhoto ? selectedPhoto.name : null,
+        photoType: selectedPhoto ? selectedPhoto.type : null
+      };
+
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> עדכן בגוגל שיטס (Google Sheets)`;
+        if (res.success) {
+          showToast(res.message);
+          document.getElementById('readingInput').value = '';
+          document.getElementById('photoTxt').textContent = "לחץ כאן כדי לצלם או להעלות תמונה";
+          selectedPhoto = null;
+          document.getElementById('previewCard').classList.add('hidden');
+        }
+      }).submitMeterReading(payload);
+    });
+
+    function showToast(msg) {
+      var box = document.getElementById('toastBox');
+      document.getElementById('toastTxt').textContent = msg;
+      box.classList.remove('hidden');
+      setTimeout(function() { box.classList.add('hidden'); }, 4500);
+    }
+  </script>
+</body>
+</html>
