@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מחשבון חשבון חשמל לדיירים | Electricity Cost Calculator</title>
+  
+  <!-- Google Fonts: Rubik & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <div class="brand-text">
+          <h1>מחשבון חשמל לדיירים</h1>
+          <p>חישוב עלויות צריכה ועדכון אוטומטי בקובץ Excel (עמודות I ו-Q)</p>
+        </div>
+      </div>
+      
+      <div class="header-tariff-badge" id="tariffBadge">
+        <div class="badge-status-dot"></div>
+        <div class="badge-text">
+          <span class="badge-label">תעריף ארצי מעודכן:</span>
+          <strong id="headerTariffValue">0.6352 ₪/קוט"ש</strong>
+          <span class="badge-sub">(כולל מע"מ)</span>
+        </div>
+        <button class="btn-icon" id="refreshTariffBtn" title="רענן תעריף מול רשות החשמל">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-content">
+      
+      <!-- Left Column: Input Form & Preview -->
+      <section class="card input-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-gauge-high"></i> הזנת קריאת מונה חדשה</h2>
+          <div class="lang-toggle">
+            <span class="active">עברית</span>
+          </div>
+        </div>
+
+        <form id="readingForm" class="reading-form">
+          
+          <!-- Meter Selector -->
+          <div class="form-group">
+            <label class="form-label">בחר מונה חשמל:</label>
+            <div class="meter-selector">
+              <label class="meter-option active" id="optionTenant2">
+                <input type="radio" name="meter_type" value="small_watch" checked>
+                <div class="option-content">
+                  <i class="fa-solid fa-user-gear"></i>
+                  <div class="option-title">מונה קטן - דייר משני</div>
+                  <div class="option-desc">כותב לעמודה <strong>Q</strong> ב-Excel</div>
+                </div>
+              </label>
+
+              <label class="meter-option" id="optionTenant1">
+                <input type="radio" name="meter_type" value="big_watch">
+                <div class="option-content">
+                  <i class="fa-solid fa-house-chimney"></i>
+                  <div class="option-title">מונה ראשי - בית מרכזי</div>
+                  <div class="option-desc">כותב לעמודה <strong>I</strong> ב-Excel</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Date & Reading Inputs -->
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="readingDate" class="form-label">תאריך הקריאה:</label>
+              <div class="input-with-icon">
+                <i class="fa-regular fa-calendar"></i>
+                <input type="date" id="readingDate" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group col-half">
+              <label for="readingKwh" class="form-label">קריאת המונה ב-קוט"ש:</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-bolt"></i>
+                <input type="number" step="0.1" id="readingKwh" class="form-control" placeholder="לדוגמה: 81325.1" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Photo Upload Section -->
+          <div class="form-group">
+            <label class="form-label">צילום מזהה מונה (חובה/מומלץ):</label>
+            <div class="photo-upload-zone" id="uploadZone">
+              <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+              
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <p>לחץ או גלור לכאן צילום של מונה החשמל</p>
+                <span>PNG, JPG, WEBP עד 10MB</span>
+              </div>
+
+              <div class="upload-preview hidden" id="uploadPreview">
+                <img id="previewImage" src="" alt="תמונת מונה">
+                <button type="button" class="btn-remove-photo" id="removePhotoBtn" title="הסר תמונה">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Calculation Preview Card -->
+          <div class="calculation-preview hidden" id="calcPreviewCard">
+            <div class="preview-header">
+              <i class="fa-solid fa-calculator"></i> סיכום חישוב צפוי
+            </div>
+            
+            <div class="preview-grid">
+              <div class="preview-item">
+                <span class="item-label">קריאה קודמת:</span>
+                <strong id="prevReadingVal">--</strong>
+              </div>
+              <div class="preview-item">
+                <span class="item-label">צריכה לתקופה:</span>
+                <strong id="kwhConsumedVal">-- קוט"ש</strong>
+              </div>
+              <div class="preview-item">
+                <span class="item-label">ימים בתקופה:</span>
+                <strong id="daysVal">-- ימים</strong>
+              </div>
+              <div class="preview-item">
+                <span class="item-label">ממוצע יומי:</span>
+                <strong id="kwhPerDayVal">-- קוט"ש/יום</strong>
+              </div>
+            </div>
+
+            <div class="preview-divider"></div>
+
+            <div class="preview-result">
+              <div class="result-target">
+                <span>יעד כתיבה:</span>
+                <strong id="targetColName">עמודה Q (תשלום חודשי)</strong>
+              </div>
+              <div class="result-amount">
+                <span>עלות לתשלום:</span>
+                <strong id="calcCostAmount">0.00 ₪</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>חשב ועדכן בקובץ Excel</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- Right Column: History & Stats -->
+      <section class="card history-card">
+        <div class="card-header">
+          <h2><i class="fa-solid fa-table-list"></i> היסטוריית קריאות ותשלומים</h2>
+          <button class="btn-secondary-sm" id="reloadHistoryBtn">
+            <i class="fa-solid fa-arrows-rotate"></i> טען מחדש
+          </button>
+        </div>
+
+        <!-- Meter Switcher Tabs -->
+        <div class="history-tabs">
+          <button class="tab-btn active" id="tabSmallWatch">
+            <i class="fa-solid fa-user"></i> מונה קטן (דייר משני - Column Q)
+          </button>
+          <button class="tab-btn" id="tabBigWatch">
+            <i class="fa-solid fa-house"></i> מונה ראשי (בית - Column I)
+          </button>
+        </div>
+
+        <!-- History Table Container -->
+        <div class="table-responsive">
+          <table class="history-table" id="historyTable">
+            <thead>
+              <tr id="tableHeaderRow">
+                <th>#</th>
+                <th>תאריך</th>
+                <th>קריאת מונה</th>
+                <th>צריכה (קוט"ש)</th>
+                <th>ימים</th>
+                <th>ממוצע יומי</th>
+                <th class="highlight-col">תשלום חודשי (₪)</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="7" class="loading-cell">
+                  <i class="fa-solid fa-spinner fa-spin"></i> טוען נתונים מקובץ החשמל...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Info Notice -->
+        <div class="excel-info-box">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            <strong>מיקום הקובץ:</strong>
+            <span id="excelPathDisplay">G:\My Drive\Gonen\משק הראל\חשבון חשמל\חשבון חשמל.xlsx</span>
+            <p>כל הזנה יוצרת גיבוי אוטומטי ומעדכנת באופן ישיר את הנוסחאות בקובץ.</p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
