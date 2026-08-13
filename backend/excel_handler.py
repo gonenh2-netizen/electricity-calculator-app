@@ -62,11 +62,32 @@ class ExcelHandler:
                     "cost_col_q": sheet.cell(row=r, column=17).value  # Column Q
                 })
 
+        # Read historical tariffs table if present
+        tariff_history = []
+        if "תעריפי חשמל היסטוריים" in wb.sheetnames:
+            ws_h = wb["תעריפי חשמל היסטוריים"]
+            for r in range(3, ws_h.max_row + 1):
+                d_val = ws_h.cell(row=r, column=1).value
+                base_v = ws_h.cell(row=r, column=2).value
+                vat_str = ws_h.cell(row=r, column=3).value
+                agorot_val = ws_h.cell(row=r, column=5).value
+                notes_val = ws_h.cell(row=r, column=6).value
+                if d_val:
+                    tariff_history.append({
+                        "date": str(d_val),
+                        "base_rate": base_v,
+                        "vat": vat_str,
+                        "rate_with_vat": round(float(base_v) * 1.17, 4) if isinstance(base_v, (int, float)) else 0,
+                        "agorot": agorot_val,
+                        "notes": notes_val
+                    })
+
         return {
             "base_rate_g2": base_rate,
             "rate_with_vat_g1": rate_with_vat,
             "big_watch": big_watch_rows,
-            "small_watch": small_watch_rows
+            "small_watch": small_watch_rows,
+            "tariff_history": tariff_history
         }
 
     def update_base_tariff(self, base_rate):
