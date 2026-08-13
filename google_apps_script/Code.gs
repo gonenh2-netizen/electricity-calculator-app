@@ -3,11 +3,16 @@
  * Built for Google Sheets integration with automatic Column I & Column Q payments.
  */
 
+// Current Israeli Electricity Tariff (Base before VAT: 0.5429 NIS -> 0.6352 NIS incl 17% VAT)
+var CURRENT_BASE_TARIFF = 0.5429;
+
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('חשבון חשמל ⚡')
     .addItem('פתח מחשבון דיירים (סרגל צד)', 'showSidebarCalculator')
     .addItem('פתח מחשבון דיירים (חלון מלא)', 'showDialogCalculator')
+    .addSeparator()
+    .addItem('עדכן תעריף חשמל מעודכן (0.6352 ₪)', 'updateSpreadsheetTariff')
     .addToUi();
 }
 
@@ -35,21 +40,34 @@ function showDialogCalculator() {
   SpreadsheetApp.getUi().showModalDialog(html, 'מחשבון חשמל לדיירים');
 }
 
+function updateSpreadsheetTariff() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange("G2").setValue(CURRENT_BASE_TARIFF);
+  sheet.getRange("G1").setFormula("=G2*1.17");
+  
+  var ui = SpreadsheetApp.getUi();
+  ui.alert('עדכון תעריף חשמל', 'תעריף החשמל עודכן בהצלחה בגיליון:\n• תעריף בסיס (תא G2): ' + CURRENT_BASE_TARIFF + ' ₪\n• תעריף כולל מע"מ (תא G1): 0.6352 ₪/קוט"ש', ui.ButtonSet.OK);
+}
+
 function getTariffInfo() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var baseRate = sheet.getRange("G2").getValue();
   var rateWithVat = sheet.getRange("G1").getValue();
 
-  if (typeof baseRate !== 'number' || baseRate === 0) {
-    baseRate = 0.5429;
+  if (typeof baseRate !== 'number' || baseRate === 0 || baseRate < 0.45) {
+    baseRate = CURRENT_BASE_TARIFF;
+    sheet.getRange("G2").setValue(baseRate);
+    sheet.getRange("G1").setFormula("=G2*1.17");
+    rateWithVat = 0.6352;
   }
+  
   if (typeof rateWithVat !== 'number' || rateWithVat === 0) {
     rateWithVat = Math.round(baseRate * 1.17 * 10000) / 10000;
   }
 
   return {
     base_rate: baseRate,
-    rate_with_vat: rateWithVat,
+    rate_with_vat: Math.round(rateWithVat * 10000) / 10000,
     vat_percent: 17.0
   };
 }
@@ -151,6 +169,9 @@ function submitMeterReading(data) {
   var dateStr = data.dateStr;
   var reading = parseFloat(data.reading);
 
+  // Ensure tariff G2 is up to date
+  getTariffInfo();
+
   var photoUrl = "";
   if (data.photoBase64 && data.photoName) {
     try {
@@ -195,7 +216,7 @@ function submitMeterReading(data) {
 
     return {
       success: true,
-      message: "הקריאה נרשמה בהצלחה עודכנה עמודה I (שורה " + nextRow + ")!",
+      message: "הקריאה נרשמה בהצלחה ועודכנה עמודה I (שורה " + nextRow + ")!",
       photo_url: photoUrl
     };
   } else {
